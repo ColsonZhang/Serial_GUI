@@ -53,7 +53,9 @@ class SerialConnect():
 
     def Close_Serial(self):
         self.serial.close()
-        print("Close Successful ? ",(not bool(self.serial.is_open)))
+        close_success = not bool(self.serial.is_open)
+        print("Close Successful ? ",close_success)
+        return close_success
 
     def Flush_Input(self):
         self.serial.flushInput()

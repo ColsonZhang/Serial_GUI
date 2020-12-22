@@ -48,6 +48,8 @@ import mythread
 data = [0]
 #!!!!!!
 #todo: use the class to describe the data-container
+#todo: use the data.stream instead of changing data
+#todo: set a range to update the data
 
 # serial info
 serial_info = {"portx":"COM1",
@@ -56,7 +58,8 @@ serial_info = {"portx":"COM1",
 
 # control container
 flag_control_global = {"connect":False ,
-                "disconnect":False,}
+                       "disconnect":False,
+                       "status":False}
 
 """
 =====================================================================
@@ -77,14 +80,17 @@ def bkapp(doc):
         global flag_control_global
         # source.stream(dict(x=[x], y=[y]))
         if(flag_control_local["start"]):
-            source.data =  dict(x=x, y=y)
-        
-        if(flag_control_global["connect"]):
+            source.data =  dict(x=x, y=y)    
+
+        if(flag_control_global["status"]):
             button_open.disabled = True
             button_close.disabled = False 
         else:
+            button_open.disabled = False
+            button_close.disabled = True             
             if(flag):
                 select_port.options = refresh_com()
+
 
     def blocking_task():
         global data
@@ -94,7 +100,7 @@ def bkapp(doc):
         flag_update = False
         while True:
             # do some blocking computation
-            time.sleep(0.02)
+            time.sleep(0.05)
             flag_update = False
             count = count + 1
             if (count>=50):

@@ -34,7 +34,7 @@ class myThread4 (threading.Thread):
 
     def run(self):
         flag_ctr_connect = False
-        flag_ctr_disconnect = False
+        flag_ctr_disconnect = True
         
         while(True):
             if(not self.Flag):
@@ -43,17 +43,21 @@ class myThread4 (threading.Thread):
                 if((not flag_ctr_connect) and self.control["connect"]):
                     print("-------------\nOpen the serial\n-------------")
                     self.control["connect"] = False
-                    flag_ctr_connect = True
-                    flag_ctr_disconnect = False
-                    self.ser.Open_Serial()
+                    open_success = self.ser.Open_Serial()
+                    if open_success:
+                        self.control["status"] = True
+                        flag_ctr_connect = True
+                        flag_ctr_disconnect = False
 
                 if((not flag_ctr_disconnect) and self.control["disconnect"]):
                     print("-------------\nClose the serial\n-------------")
                     self.control["disconnect"] = False
-                    flag_ctr_connect = False
-                    flag_ctr_disconnect = True
-                    self.ser.Close_Serial()    
-                            
+                    close_success = self.ser.Close_Serial()
+                    if close_success:
+                        self.control["status"] = False
+                        flag_ctr_connect = False
+                        flag_ctr_disconnect = True
+
                 if(flag_ctr_connect):
                     data_term = self.ser.Read_Data()
                     if(len(data_term)>0):
