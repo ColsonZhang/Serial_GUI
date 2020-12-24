@@ -38,7 +38,7 @@ pip install functools
 
 `python app.py`
 
-键入命令并执行后，会自动弹出web窗口，也可以通过浏览器输入http://localhost:5006  打开
+键入命令并执行后，会自动弹出web窗口，也可以通过浏览器输入http://localhost:5006/  打开
 
 ## qt版本简介
 

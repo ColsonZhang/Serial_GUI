@@ -1,14 +1,24 @@
 import serial
-portx="COM20"
+portx="COM4"
 bps=9600
 timex=1
 text=''
 #串口执行到这已经打开 再用open命令会报错
-ser = serial.Serial(portx, int(bps), timeout=1, parity=serial.PARITY_NONE,stopbits=1)
+# ser = serial.Serial(portx, int(bps), timeout=1, parity=serial.PARITY_NONE,stopbits=1)
+
+ser = serial.Serial()
+ser.baudrate=bps
+ser.port = portx
+ser.dsrdtr = False
+ser.setDTR(value=False)
+ser.open()
+
+# ser.dsrdtr = False
+# ser.setDTR(level=False)
 if (ser.isOpen()):
     print("open success")
      # 向端口些数据 字符串必须译码
-    ser.write("hello".encode()) 
+    # ser.write("hello".encode())
 
     # while (True):
     #     if ser != None and ser.is_open:
