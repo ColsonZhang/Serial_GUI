@@ -12,6 +12,8 @@
 
 用户终端与该服务器连接至同一个局域网后，可以直接访问http://localhost:5006/ ，即跳转到控制界面。
 
+* ![avatar](./web/web_server.png)
+
 ### 使用说明
 
 一、安装python 3.x
@@ -47,6 +49,15 @@ pip install functools
 将下位机硬件通过串口与服务器（树莓派或其他能够支持Python运行的微机）连接，在服务器上运行该app。
 
 用户可以在该服务器本地上运行该程序。
+
+![avatar](./qtgraph/qtgraph_demo.png)
+
+### 使用说明
+
+必须使用python3.8版本！！！
+
+仍处于开发中，pyqt5的控件尚未添加。
+
 
 # 项目目录
 
