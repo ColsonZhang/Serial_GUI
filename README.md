@@ -4,6 +4,12 @@
 
 本项目包含两个子项目：1. web版本的上位机界面；2. 基于pyqt的本地上位机界面。
 
+为防止github图片显示不出来，在gitee上备份了此项目，两个项目的链接如下。
+
+github: https://github.com/ColsonZhang/Serial_GUI
+
+gitee: https://gitee.com/colson-zhang/Serial_GUI
+
 ## web版本简介
 
 本项目是基于bokeh开发的跨平台web上位机界面。
