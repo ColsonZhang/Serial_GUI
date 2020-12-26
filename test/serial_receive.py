@@ -1,5 +1,5 @@
 import serial
-portx="COM4"
+portx="COM7"
 bps=9600
 timex=1
 text=''

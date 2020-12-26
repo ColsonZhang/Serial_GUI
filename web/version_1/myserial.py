@@ -8,29 +8,24 @@ author: Shen Zhang
 ==================================================================
 """
 
-"""
-=====================================================================
--------------------------IMPORT MODULE PART--------------------------
-=====================================================================
-"""
 import serial
 import serial.tools.list_ports
 import numpy as np
 
-"""
-=====================================================================
----------------------------THE CLASS PART----------------------------
-=====================================================================
-"""
+
 class SerialConnect():
 
     def __init__(self, ser_info):
+        # Initial the Serial Class and cancel the DTR
+        # Setting DTR's value False is important !!!
+        # Or the device will always in the reset status
+        self.serial = serial.Serial()
+        self.serial.dsrdtr = False
+        self.serial.setDTR(value=False)
+        # copy the ser_info
         self.ser_info = ser_info
-        # self.port = com
-        # self.bps = bps
-        # self.timeout = timeout
 
-
+    # Get the avaliable port's information
     @staticmethod
     def Get_Used_Com():
         used_com = []
@@ -40,10 +35,22 @@ class SerialConnect():
                 used_com.append({"device":p.device, "name":p.name, "description":p.description })
         return used_com
 
+    # Set the serial's information
+    def Set_Serial(self):
+        self.serial.port = self.ser_info["portx"]
+        self.serial.baudrate = self.ser_info["bps"]
+        self.serial.timeout = timeout=self.ser_info["timex"]
+        self.serial.parity = serial.PARITY_NONE
+        self.serial.stopbits = 1
+
+    # Open the selected serial port
+    # Return whether the operation is successful
     def Open_Serial(self):
         open_success = True
         try:
-            self.serial = serial.Serial(self.ser_info["portx"],self.ser_info["bps"],timeout=self.ser_info["timex"], parity=serial.PARITY_NONE, stopbits=1)
+            # self.serial = serial.Serial(self.ser_info["portx"],self.ser_info["bps"],timeout=self.ser_info["timex"], parity=serial.PARITY_NONE, stopbits=1)
+            self.Set_Serial()
+            self.serial.open()
             print("Open port ", self.ser_info["portx"], self.ser_info["bps"] ,"Sucess!")
         except Exception as e :
             open_success = False
