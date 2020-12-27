@@ -70,9 +70,10 @@ def bkapp(doc):
     # global variables
     global flag_control_global
     global serial_info
-    
+    global Data
+
     # local variables
-    flag_control_local = {"start":False}
+    flag_control_local = {"start":False,"exit":False,"clear":False}
     
     # widegs toolbar
     TOOLS="hover,crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,undo,redo,reset,tap,save,box_select,poly_select,lasso_select"
@@ -81,11 +82,16 @@ def bkapp(doc):
     @gen.coroutine
     def update(x, y, flag):
         global flag_control_global
-        # source.stream(dict(x=[x], y=[y]))
+
+        if(flag_control_local["clear"]):
+            flag_control_local["clear"] = False
+            print("Clearing !!!")
+            source.data =  dict(x=[], y=[])
+
         if(flag_control_local["start"]):
             if(len(y)>0):
                 source.stream(dict(x=x, y=y))
-            # source.data =  dict(x=x, y=y)    
+                # source.data =  dict(x=x, y=y)    
 
         if(flag_control_global["status"]):
             button_open.disabled = True
@@ -98,12 +104,17 @@ def bkapp(doc):
 
 
     def blocking_task():
-        global Data
+        # global Data
         # global flag_control_global
 
         count = 0
         flag_update = False
         while True:
+            if(flag_control_local["exit"]):
+                print("Exiting !!!!!!!")
+                os._exit(0)
+
+
             # do some blocking computation
             time.sleep(0.05)
             flag_update = False
@@ -135,7 +146,7 @@ def bkapp(doc):
         # flag_control_global["disconnect"] = False
         button_open.disabled = True
         button_close.disabled = False 
-        print("button open successful")
+        print("button open")
 
     # callback event of the button_close
     def callback_button_close():
@@ -143,29 +154,39 @@ def bkapp(doc):
         button_close.disabled = True
         # flag_control_global["connect"] = False
         flag_control_global["disconnect"] = True
-        print("button close successful")
+        print("button close")
     
     # callback event of the button_start
     def callback_button_start():
         button_start.disabled = True
         button_stop.disabled = False
         flag_control_local["start"] = True
-        print("button start successful")
+        print("button start")
     
     # callback event of the button_stop
     def callback_button_stop():
         button_start.disabled = False
         button_stop.disabled = True
         flag_control_local["start"] = False
-        print("button stop successful")
+        print("button stop")
     
+    def callback_ctr_button_1():
+        Data.save_data("data.csv")
+        print("save the data")
+        pass
+
+    def callback_ctr_button_2(): 
+        flag_control_local["clear"] = True
+        print("clear the data")
+        pass
+
+    def callback_ctr_button_3(): 
+        pass
+
     def callback_ctr_button_5():
         ctr_button_5.disabled = True
         print("Exit the system")
-        os._exit(0)
-
-    # def update_text_port(attrname, old, new):
-    #     pass
+        flag_control_local["exit"] = True
     
     def update_select_port(attrnaem, old, new):
         pass
@@ -191,9 +212,6 @@ def bkapp(doc):
 
     #------------------- Plot  Tab ---------------------------
     tabs = Tabs(tabs=[ mk_tab("scatter") , mk_tab("line") ])
-
-    # text_port = AutocompleteInput(title="PORT", value='COM1', completions=completions_port)
-    # text_port.on_change('value', update_text_port)
 
     #------------------- port selector -----------------------
     select_port = Select(title="PORT",value='COM1',options=["COM1", "COM2"])
@@ -250,6 +268,9 @@ def bkapp(doc):
     ctr_button_5 = Button(label="退出系统", height=30, width=100, button_type="success")
     ctr_button_6 = Button(label="指令交互", height=30, width=100, button_type="success")
     ctr_button_7 = Button(label="配置仪器", height=30, width=100, button_type="success")
+    ctr_button_1.on_click(callback_ctr_button_1)
+    ctr_button_2.on_click(callback_ctr_button_2)
+    ctr_button_3.on_click(callback_ctr_button_3)
     ctr_button_5.on_click(callback_ctr_button_5)
     ctr_button = column(ctr_button_1,ctr_button_2,ctr_button_3,ctr_button_4,ctr_button_5,ctr_button_6,ctr_button_7)
 

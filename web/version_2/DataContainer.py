@@ -1,3 +1,4 @@
+import csv
 
 class DataContainer():
 
@@ -17,6 +18,23 @@ class DataContainer():
         length = self.length
         return data_buffer,length
     
+    def clear_data(self):
+        self.container = []
+        self.buffer = []
+        self.length = []
+
+    def save_data(self,file_name):
+        with open(file_name, 'w+', newline='', encoding="utf-8") as csvfile:
+            writer  = csv.writer(csvfile)
+            for row in self.container:
+                writer.writerow([row])
+
+    def load_data(self,file_name):
+        with open(file_name, 'r', newline='', encoding="utf-8") as csvfile:    
+            reader = csv.reader(csvfile)
+            for row in reader:
+                self.append(int(row[0]))
+                # need to be improve !!!!
 
 
     
