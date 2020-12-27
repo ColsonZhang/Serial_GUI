@@ -35,6 +35,8 @@ from functools import partial
 from tornado import gen
 from random import random
 import time
+import sys
+import os
 # import local module file
 import myserial
 import mythread
@@ -71,6 +73,9 @@ def bkapp(doc):
     
     # local variables
     flag_control_local = {"start":False}
+    
+    # widegs toolbar
+    TOOLS="hover,crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,undo,redo,reset,tap,save,box_select,poly_select,lasso_select"
     
     # the period function
     @gen.coroutine
@@ -153,7 +158,12 @@ def bkapp(doc):
         button_stop.disabled = True
         flag_control_local["start"] = False
         print("button stop successful")
-            
+    
+    def callback_ctr_button_5():
+        ctr_button_5.disabled = True
+        print("Exit the system")
+        os._exit(0)
+
     # def update_text_port(attrname, old, new):
     #     pass
     
@@ -163,11 +173,24 @@ def bkapp(doc):
     def update_text_bps(attrname, old, new):
         pass
     
+    def mk_tab(type):
+        plot_tab =  figure(plot_height=300, plot_width=1100,tools=TOOLS,toolbar_location="below") 
+        # toolbar_location : "below" "above" "left" "right"
+        if type == "line":
+            plot_tab.line('x', 'y', source=source, line_width=2, line_alpha=0.6)
+        elif type == "scatter":
+            plot_tab.scatter('x', 'y', source=source, fill_alpha=0.6, size=1)
+        return Panel(title=type, child=plot_tab)
+ 
     #------------------- data plot ---------------------------
     source = ColumnDataSource(data=dict(x=[], y=[]))
-    plot = figure(plot_height=300, plot_width=1100,title="serial data wave",
-              tools="crosshair,pan,reset,save,wheel_zoom",)
-    plot.line('x', 'y', source=source, line_width=3, line_alpha=0.6)
+    
+    # plot = figure(plot_height=300, plot_width=1100,tools=TOOLS,toolbar_location="above")
+    # title="serial data wave",
+    # plot.line('x', 'y', source=source, line_width=3, line_alpha=0.6)
+
+    #------------------- Plot  Tab ---------------------------
+    tabs = Tabs(tabs=[ mk_tab("scatter") , mk_tab("line") ])
 
     # text_port = AutocompleteInput(title="PORT", value='COM1', completions=completions_port)
     # text_port.on_change('value', update_text_port)
@@ -224,15 +247,16 @@ def bkapp(doc):
     ctr_button_2 = Button(label="清除数据", height=30, width=100, button_type="success")
     ctr_button_3 = Button(label="载入数据", height=30, width=100, button_type="success")
     ctr_button_4 = Button(label="加载参数", height=30, width=100, button_type="success")
-    ctr_button_5 = Button(label="保存图像", height=30, width=100, button_type="success")
+    ctr_button_5 = Button(label="退出系统", height=30, width=100, button_type="success")
     ctr_button_6 = Button(label="指令交互", height=30, width=100, button_type="success")
     ctr_button_7 = Button(label="配置仪器", height=30, width=100, button_type="success")
+    ctr_button_5.on_click(callback_ctr_button_5)
     ctr_button = column(ctr_button_1,ctr_button_2,ctr_button_3,ctr_button_4,ctr_button_5,ctr_button_6,ctr_button_7)
 
     #--------------------------------------------------------
     #-------------------- Top layout ------------------------
     #--------------------------------------------------------
-    layout_1 = row(plot)
+    layout_1 = column(tabs)
     layout_2 = row(ctr_button,serial_control,set_param,plot_slider)
     # layout_3 = column(layout_1, layout_2)
     # layout_top = row(ctr_button,layout_3)
@@ -246,11 +270,14 @@ def bkapp(doc):
 # Setting num_procs here means we can't touch the IOLoop before now, we must
 # let Server handle that. If you need to explicitly handle IOLoops then you
 # will need to use the lower level BaseServer class.
-server = Server({'/': bkapp})
-server.start()
+# server = Server({'/': bkapp})
+# server.start()
 
 
 if __name__ == '__main__':
+
+    server = Server({'/': bkapp})
+    server.start()
 
     print('Opening Bokeh application on http://localhost:5006/')
 
@@ -261,3 +288,8 @@ if __name__ == '__main__':
 
     server.io_loop.add_callback(server.show, "/")
     server.io_loop.start()
+    # server.run_until_shutdown()
+    # try:
+    #     server.io_loop.start()
+    # except KeyboardInterrupt:
+    #     server.io_loop.stop()

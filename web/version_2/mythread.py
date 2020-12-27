@@ -64,6 +64,7 @@ class myThread4 (threading.Thread):
                         data_process(data_term,self.container)
                 else:
                     time.sleep(0.05)
+        print("------------Thread4 exit!!!----------------")
             
 
 def data_process(data_raw,data):
@@ -92,3 +93,4 @@ class myThread_ctr (threading.Thread):
             if a == "e":
                 self.theThread.Flag = False
                 break
+        print("------------Thread ctr exit!!!----------------")
