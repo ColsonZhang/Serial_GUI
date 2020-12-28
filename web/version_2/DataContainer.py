@@ -21,7 +21,7 @@ class DataContainer():
     def clear_data(self):
         self.container = []
         self.buffer = []
-        self.length = []
+        self.length = 0
 
     def save_data(self,file_name):
         with open(file_name, 'w+', newline='', encoding="utf-8") as csvfile:
@@ -30,6 +30,7 @@ class DataContainer():
                 writer.writerow([row])
 
     def load_data(self,file_name):
+        self.clear_data()
         with open(file_name, 'r', newline='', encoding="utf-8") as csvfile:    
             reader = csv.reader(csvfile)
             for row in reader:

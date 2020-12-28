@@ -16,10 +16,10 @@ author: Shen Zhang
 """
 # import bokeh module
 from bokeh.plotting import figure
-from bokeh.sampledata.sea_surface_temperature import sea_surface_temperature
+from bokeh import events
+# from bokeh.sampledata.sea_surface_temperature import sea_surface_temperature
 from bokeh.server.server import Server
 from bokeh.themes import Theme
-# from bokeh.models import (AutocompleteInput,ColumnDataSource, Slider, TextInput, Button ,Div , Text, Select)
 from bokeh.models import (AutocompleteInput, Button, CheckboxButtonGroup, CheckboxGroup,
                           ColorPicker, Column, ColumnDataSource, DataTable, DatePicker,
                           DateRangeSlider, DateSlider, Div, Dropdown, IntEditor,
@@ -28,7 +28,8 @@ from bokeh.models import (AutocompleteInput, Button, CheckboxButtonGroup, Checkb
                           Select, SelectEditor, Slider, Spinner, StringEditor,
                           StringFormatter, TableColumn, Tabs, TextInput, Toggle,)
 from bokeh.layouts import column, row
-from bokeh.models import CustomJS
+from bokeh.models import CustomJS,CustomJSTransform
+# from bokeh.transform import CustomJSTransform
 # import other module
 from threading import Thread
 from functools import partial
@@ -57,9 +58,9 @@ serial_info = {"portx":"COM1",
                "timex":0.5 }
 
 # control container
-flag_control_global = {"connect":False ,
-                       "disconnect":False,
-                       "status":False}
+flag_control_global = { "connect"   :   False ,
+                        "disconnect":   False,
+                        "status"    :   False}
 
 """
 =====================================================================
@@ -73,22 +74,39 @@ def bkapp(doc):
     global Data
 
     # local variables
-    flag_control_local = {"start":False,"exit":False,"clear":False}
+    flag_control_local = {  "start" :   False,
+                            "exit"  :   False,
+                            "clear" :   False,
+                            "load"  :   False }
+
+    filename_control = ColumnDataSource(data=dict( save_flag=[False], save_name=["data0.csv"], load_name=["data0.csv"]  ))
+    # {   "save"       :  False,
+    #    "save_name"  :   "data.csv",
+    #    "load_name"  :   "data.csv"}
     
     # widegs toolbar
     TOOLS="hover,crosshair,pan,wheel_zoom,zoom_in,zoom_out,box_zoom,undo,redo,reset,tap,save,box_select,poly_select,lasso_select"
     
     # the period function
     @gen.coroutine
-    def update(x, y, flag):
+    def update( flag ):
         global flag_control_global
 
         if(flag_control_local["clear"]):
             flag_control_local["clear"] = False
             print("Clearing !!!")
             source.data =  dict(x=[], y=[])
+        
+        if(flag_control_local["load"]):
+            flag_control_local["load"] = False
+            Data.load_data("data.csv")
+            y = Data.container.copy()
+            x = list(range(len(y)))
+            source.data =  dict( x=x, y=y )
 
         if(flag_control_local["start"]):
+            y,base_len = Data.get_buffer()
+            x = list(range(base_len-len(y), base_len, 1))
             if(len(y)>0):
                 source.stream(dict(x=x, y=y))
                 # source.data =  dict(x=x, y=y)    
@@ -102,33 +120,34 @@ def bkapp(doc):
             if(flag):
                 select_port.options = refresh_com()
 
-
     def blocking_task():
-        # global Data
-        # global flag_control_global
-
         count = 0
         flag_update = False
+
         while True:
+            time.sleep(0.05)
+            flag_update = False
+            count = count + 1
+
             if(flag_control_local["exit"]):
                 print("Exiting !!!!!!!")
                 os._exit(0)
 
+            # if(filename_control.data['save_flag'][0]):
+            #     filename_control.data['save_flag'][0] = False
+            #     print("save the data!!!")
 
-            # do some blocking computation
-            time.sleep(0.05)
-            flag_update = False
-            count = count + 1
-            if (count>=50):
+            if (count>=40):
+                print(filename_control.data['save_flag'][0],"\t",filename_control.data['save_name'][0])
                 flag_update = True
                 count = 0
-            
-            # yin = data[:-1]
-            # xin = range(len(yin))
-            yin,base_len = Data.get_buffer()
-            xin = list(range(base_len-len(yin), base_len, 1))
-            # but update the document from callback
-            doc.add_next_tick_callback(partial(update, x=xin, y=yin, flag=flag_update))
+
+            # if (count>=50):
+            #     flag_update = True
+            #     count = 0
+
+            # update the document from callback
+            doc.add_next_tick_callback(partial(update, flag=flag_update))
 
     def refresh_com():
         available_port = []
@@ -170,6 +189,17 @@ def bkapp(doc):
         flag_control_local["start"] = False
         print("button stop")
     
+    customjs_button_1 = CustomJS(args=dict(source = filename_control ), code="""
+        var file =  window.prompt("Input the file name","data.csv");
+        var flag = [true];
+        var name = [file];       
+        source.data['save_flag'] = flag;
+        source.data['save_name'] = name;
+        // source.change.emit();
+        window.alert("Saving !!!");
+    """)
+
+    
     def callback_ctr_button_1():
         Data.save_data("data.csv")
         print("save the data")
@@ -181,6 +211,8 @@ def bkapp(doc):
         pass
 
     def callback_ctr_button_3(): 
+        flag_control_local["load"] = True
+        print("load local data")
         pass
 
     def callback_ctr_button_5():
@@ -195,7 +227,7 @@ def bkapp(doc):
         pass
     
     def mk_tab(type):
-        plot_tab =  figure(plot_height=300, plot_width=1100,tools=TOOLS,toolbar_location="below") 
+        plot_tab =  figure(plot_height=300, plot_width=1100,tools=TOOLS,toolbar_location="above") # background_fill_color="lightgrey"
         # toolbar_location : "below" "above" "left" "right"
         if type == "line":
             plot_tab.line('x', 'y', source=source, line_width=2, line_alpha=0.6)
@@ -260,6 +292,7 @@ def bkapp(doc):
     plot_button_1 = Button(label="滤波", button_type="success")
     plot_slider = column(plot_slider_1,plot_slider_2,plot_slider_3,plot_slider_4,plot_button_1)
 
+
     ctr_button_0 = Button(label="使用说明", height=30, width=100, button_type="success")
     ctr_button_1 = Button(label="保存数据", height=30, width=100, button_type="success")
     ctr_button_2 = Button(label="清除数据", height=30, width=100, button_type="success")
@@ -269,6 +302,8 @@ def bkapp(doc):
     ctr_button_6 = Button(label="指令交互", height=30, width=100, button_type="success")
     ctr_button_7 = Button(label="配置仪器", height=30, width=100, button_type="success")
     ctr_button_1.on_click(callback_ctr_button_1)
+    # ctr_button_1.js_on_click(customjs_button_1)
+    # ctr_button_1.js_on_event(events.ButtonClick, customjs_button_1)
     ctr_button_2.on_click(callback_ctr_button_2)
     ctr_button_3.on_click(callback_ctr_button_3)
     ctr_button_5.on_click(callback_ctr_button_5)
@@ -278,9 +313,7 @@ def bkapp(doc):
     #-------------------- Top layout ------------------------
     #--------------------------------------------------------
     layout_1 = column(tabs)
-    layout_2 = row(ctr_button,serial_control,set_param,plot_slider)
-    # layout_3 = column(layout_1, layout_2)
-    # layout_top = row(ctr_button,layout_3)
+    layout_2 = row(ctr_button,serial_control,plot_slider,set_param)
     layout_top = column(layout_1, layout_2)
     doc.add_root(layout_top)
     
@@ -288,15 +321,11 @@ def bkapp(doc):
     thread_update_data.start()
 
 
-# Setting num_procs here means we can't touch the IOLoop before now, we must
-# let Server handle that. If you need to explicitly handle IOLoops then you
-# will need to use the lower level BaseServer class.
-# server = Server({'/': bkapp})
-# server.start()
-
 
 if __name__ == '__main__':
-
+    # Setting num_procs here means we can't touch the IOLoop before now, we must
+    # let Server handle that. If you need to explicitly handle IOLoops then you
+    # will need to use the lower level BaseServer class.
     server = Server({'/': bkapp})
     server.start()
 
@@ -309,8 +338,4 @@ if __name__ == '__main__':
 
     server.io_loop.add_callback(server.show, "/")
     server.io_loop.start()
-    # server.run_until_shutdown()
-    # try:
-    #     server.io_loop.start()
-    # except KeyboardInterrupt:
-    #     server.io_loop.stop()
+
